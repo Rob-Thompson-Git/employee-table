@@ -1,13 +1,10 @@
-const db = require('./config/mysqlConnection')
-const inquirer = require('inquirer');
+const db = require('./db')
+const { prompt } = require("inquirer");
 const cTable = require('console.table');
 const mysql = require('mysql2');
 
-console.log(db);
-
 function start() {
-    inquirer
-        .prompt([
+        prompt([
             {
                 type: 'list',
                 message: 'What would you like to do?',
@@ -19,10 +16,10 @@ function start() {
                     'View All Departments',
                     'Add Department',
                     'Leave'],
-                name: 'list',
+                name: 'menu',
             },
         ]).then((response) => {
-            switch (response.list) {
+            switch (response.menu) {
                 case 'View All Employees':
                     viewAllEmployees();
                     break;
@@ -39,99 +36,156 @@ function start() {
                     addRole();
                     break;
                 case 'View All Departments':
-                    viewAllDep();
+                    viewAllDeps();
                     break;
-                case 'Add Departments':
+                case 'Add Department':
                     addDepartments();
                     break;
                 case 'Leave':
-                    db.end();
+                    db.connection.end();
                     break;
             }
         })
 };
 
-//View all employees
-viewAllEmployees(() => {
-    let query = `Select * FROM employee`;
-    db.query(query, function (err, res) {
-        if(err) throw err;
-        console.table(res);
-        start();
+//View
+function viewAllEmployees() {
+    
+    db.findAllEmployees()
+    .then(([rows]) => {
+        let employees = rows;
+        console.table(employees);
     })
-})
+    .then(() => start());
+}
 
-addEmployee(() => {
-    let query = `Select `
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
+function viewAllDeps() {
+    db.findAllDepartments()
+    .then(([rows]) => {
+        let employees = rows;
+        console.table(employees);
     })
-})
+    .then(() => start());
+}
 
-updateEmployeeRole(() => {
-    let query = `Select `
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
+function viewAllRoles() {
+    db.findAllRoles()
+    .then(([rows]) => {
+        let employees = rows;
+        console.table(employees);
     })
-})
+    .then(() => start());
+}
 
-viewAllRoles(() => {
-    let query = `SELECT * FROM role`;
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
-    })
-})
-
-addRole(() => {
-    let query = `Select `
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
-    })
-})
-
-addEmployee(() => {
-    let query = `Select `
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
-    })
-})
-
-viewAllDep(() => {
-    let query = `SELECT * FROM department`;
-    db.query(query, function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        start();
-    })
-})
-
-addDepartments(() => {
-    db.query(`SELECT * FROM department`, (err, res) => {
-        inquirer
-            .prompt([
-                {
-                    type: 'input',
-                    message: 'Enter new department name?',
-                    name: 'depAdd'
-                },
-            ]).then((res) => {
-                db.query('INSERT INTO department SET ?', 
-                {department_name: res.add})
-                start();
+//Add
+function addEmployee() {
+    prompt([
+        {
+            name: 'first_name',
+            message: 'What is the employees first name?'
+        },
+        {
+            name: 'last_name',
+            message: 'What is the employees last name?'
+        },
+    ])
+    .then(res => {
+        let firstName = res.first_name;
+        let lastName = res.last_name;
+        db.findAllRoles()
+        .then(([rows]) => {
+            let roles = rows;
+            const roleChoices = roles.map(({id, title}) => ({
+                name: title, 
+                value: id
+            }));
+            prompt({
+                type: 'list',
+                name: 'roleId',
+                message: 'What is the employees role?',
+                choices: roleChoices
             })
+            .then(res => {
+                let roleId = res.roleId;
+                db.findAllEmployees()
+                .then(([rows]) => {
+                    let employees = rows;
+                    const managerChoices = employees.map(({
+                        id, first_name, last_name
+                    }) => ({
+                        name: `${first_name} ${last_name}`, 
+                        value: id
+                    }));
+                    managerChoices.unshift({name: 'None', value: null});
+                    prompt({
+                        type: 'list',
+                        name: 'managerId',
+                        message: 'Who is the employees manager?',
+                        choices: managerChoices
+                    })
+                    .then(res => {
+                        let employee = {
+                            manager_id: res.managerId,
+                            role_id: roleId,
+                            first_name: firstName,
+                            last_name: lastName
+                        }
+                        db.createEmployee(employee);
+                    })
+                    .then(() => 
+                    console.log(`added ${firstName} ${lastName} to the database`))
+                    .then(() => start())
+                })
+            })
+        })
     })
-    // let query = `Select `
-    // db.query(query, function (err, res) {
-    //     console.table(res);
-    //     start();
-    // })
-})
+}
+
+function addDepartments()  {
+    prompt([
+            {
+                name: 'new_dep',
+                message: 'What is the name of the department?',
+                
+            },
+        ])
+            .then(res => {
+                const newDep = res.new_dep;
+                let department = {
+                    name: newDep
+                }
+                db.createDepartment(department);
+        })
+            .then(() => 
+            console.log(`added ${newDep} to the database`))
+            .then(() => start())
+    }
+
+
+
+
+
+const updateEmployeeRole = () => {
+    let query = `Select `
+    db.query(query, function (err, res) {
+        console.table(res);
+        start();
+    })
+}
+
+
+
+const addRole = () => {
+    let query = `Select `
+    db.query(query, function (err, res) {
+        console.table(res);
+        start();
+    })
+}
+
 
 start();
 
-app.listen(PORT, () => console.log(`Listening on PORT: ${PORT}`));
+
+
+
