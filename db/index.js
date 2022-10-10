@@ -33,6 +33,12 @@ class DB {
             department
         );
     }
+    createRoles(role) {
+        return this.connection.promise().query(
+            "INSERT INTO role SET ?", 
+            role
+        );
+    }
    
    
 }

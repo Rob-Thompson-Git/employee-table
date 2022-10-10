@@ -155,10 +155,31 @@ function addDepartments()  {
                     name: newDep
                 }
                 db.createDepartment(department);
+                return newDep;
         })
-            .then(() => 
+            .then((newDep) => 
             console.log(`added ${newDep} to the database`))
             .then(() => start())
+    }
+
+function addRole() {
+        prompt([
+            {
+                name: 'new_role',
+                message: 'What is the name of the role?',
+                
+            },
+            {
+                name: 'role_salary',
+                message: 'What is the salary of the role?',
+                
+            },
+        ])
+        let query = `Select `
+        db.query(query, function (err, res) {
+            console.table(res);
+            start();
+        })
     }
 
 
@@ -175,13 +196,7 @@ const updateEmployeeRole = () => {
 
 
 
-const addRole = () => {
-    let query = `Select `
-    db.query(query, function (err, res) {
-        console.table(res);
-        start();
-    })
-}
+
 
 
 start();
