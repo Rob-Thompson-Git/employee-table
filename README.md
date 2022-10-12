@@ -21,7 +21,7 @@ The user must install inquirer by opening the server.js file in the terminal and
 
 ## Usage
 
-[![Watch the video]](https://drive.google.com/file/d/1EzPG7kvu75tsMdNK7EIxLPuO-LaAIym6/view?usp=sharingLinks to an external site.)
+[![Watch the video]](https://drive.google.com/file/d/1EzPG7kvu75tsMdNK7EIxLPuO-LaAIym6/view?usp=sharingLinks)
 
 ## Credits
 
